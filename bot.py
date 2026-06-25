@@ -4,10 +4,11 @@ from telebot import types
 import requests
 import sqlite3
 from flask import Flask, request
+from threading import Thread
 
 # ----------------- تنظیمات اولیه ربات -----------------
-BOT_TOKEN = '8609389890:AAFHNmgPSb6CXIG15gOtdWWnqBG4VC5375I'
-ADMIN_ID = 7267007753  # آیدی عددی خودت (ادمین)
+BOT_TOKEN = '8609389890:AAFHNmGPsb6CXIG15gOtdWwnqBG4VC5375I' # توکن شما
+ADMIN_ID = 7267007753  # آیدی عددی ادمین
 
 # ----------------- اطلاعات پنل نهان کلودفلر -----------------
 NAHAN_API_URL = 'https://still-disk-40a6.ddvdfxfv.workers.dev' 
@@ -165,7 +166,7 @@ def process_plan_selection(call):
     
     formatted_price = "{:,}".format(int(price))
     
-    text = f"💳 **درخواست خرید پلان {plan_display} ثبت شد**\n\n💰 مبلغ: {formatted_price} تومان\n📍 لطفاً مبلغ را به شماره کارت زیر واریز کنید و **فقط عکس رسید** را در پاسخ به این پیام فرستید:\n\n`6037997275603489`\nبه نام رایین ایمانی"
+    text = f"💳 **درخواست خرید پلان {plan_display} ثبت شد**\n\n💰 مبلغ: {formatted_price} تومان\n📍 لطفاً مبلغ را به شماره کارت زیر واریز کنید و **فقط عکس رسید** را در پاسخ به این پیام فرستید:\n\n`شماره_کارت_جدید_شما`\nبه نام مدیریت"
     msg = bot.send_message(call.message.chat.id, text, parse_mode="Markdown")
     bot.register_next_step_handler(msg, receive_receipt, order_id)
 
@@ -195,62 +196,3 @@ def process_admin_action(call):
         bot.edit_message_caption("✅ این رسید تایید شد و کانفیگ در حال ساخت است...", call.message.chat.id, call.message.message_id)
         
         conn = sqlite3.connect('shop_database.db')
-        cursor = conn.cursor()
-        cursor.execute('SELECT days, volume_gb FROM pending_orders WHERE id = ?', (order_id,))
-        row = cursor.fetchone()
-        
-        if row:
-            days, volume = row
-            username = f"user_{user_id}_{order_id}"
-            config_link = create_panel_config(username, days, volume)
-            
-            if config_link:
-                bot.send_message(user_id, f"🎉 **خرید شما توسط مدیریت تایید شد!**\n\n🔑 **لینک کانفیگ اختصاصی شما:**\n`{config_link}`", parse_mode="Markdown")
-                bot.send_message(ADMIN_ID, "✅ کانفیگ با موفقیت ساخته و به کاربر تحویل داده شد.")
-            else:
-                bot.send_message(user_id, "❌ خرید شما تایید شد اما خطایی در اتصال به پنل رخ داد. لطفا به پشتیبانی پیام دهید.")
-                bot.send_message(ADMIN_ID, "❌ خطا: رسید تایید شد ولی پنل لینک رو نساخت.")
-        conn.close()
-        
-    elif action == "reject":
-        bot.edit_message_caption("❌ این رسید رد شد.", call.message.chat.id, call.message.message_id)
-        bot.send_message(user_id, "❌ **رسید واریزی شما توسط مدیریت رد شد.**\nاگر اشتباهی رخ داده لطفا به پشتیبانی پیام دهید.")
-
-@bot.message_handler(func=lambda message: message.text == "👥 زیرمجموعه‌گیری و هدیه")
-def referral_menu(message):
-    bot_info = bot.get_me()
-    ref_link = f"https://t.me/{bot_info.username}?start={message.chat.id}"
-    conn = sqlite3.connect('shop_database.db')
-    cursor = conn.cursor()
-    cursor.execute('SELECT invite_count FROM users WHERE user_id = ?', (message.chat.id,))
-    row = cursor.fetchone()
-    invite_count = row[0] if row else 0
-    conn.close()
-    text = f"🎁 **سیستم زیرمجموعه‌گیری**\n\n📊 تعداد دعوت‌های شما: `{invite_count}` نفر\n🔗 لینک اختصاصی شما:\n`{ref_link}`"
-    bot.send_message(message.chat.id, text, parse_mode="Markdown")
-
-# ----------------- تنظیمات وب‌هوک رندر -----------------
-# ----------------- تنظیمات وب‌هوک رندر -----------------
-@app.route('/' + BOT_TOKEN, methods=['POST'])
-def getMessage():
-    json_string = request.get_data().decode('utf-8')
-    update = telebot.types.Update.de_json(json_string)
-    bot.process_new_updates([update])
-    return "!", 200
-
-@app.route("/")
-def webhook():
-    # این صفحه فقط برای باز نگه داشتن سرور رندر هست و دیگه وب‌هوک رو دستکاری نمی‌کنه
-    return "Bot is active!", 200
-
-if __name__ == "__main__":
-    # وب‌هوک فقط و فقط یک‌بار موقع استارت شدن اولیه برنامه ست میشه
-    try:
-        bot.remove_webhook()
-        # حواست باشه آدرس زیر رو دقیقاً به آدرس رندر خودت تغییر بدی (بدون اسلش آخر)
-        bot.set_webhook(url='https://YOUR_RENDER_APP_NAME.onrender.com/' + BOT_TOKEN)
-        print("Webhook successfully set!")
-    except Exception as e:
-        print(f"Error setting webhook: {e}")
-        
-    app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
