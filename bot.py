@@ -230,6 +230,7 @@ def referral_menu(message):
     bot.send_message(message.chat.id, text, parse_mode="Markdown")
 
 # ----------------- تنظیمات وب‌هوک رندر -----------------
+# ----------------- تنظیمات وب‌هوک رندر -----------------
 @app.route('/' + BOT_TOKEN, methods=['POST'])
 def getMessage():
     json_string = request.get_data().decode('utf-8')
@@ -239,9 +240,17 @@ def getMessage():
 
 @app.route("/")
 def webhook():
-    bot.remove_webhook()
-    bot.set_webhook(url='https://https://my-fast-vpn-bot.onrender.com/' + BOT_TOKEN)
+    # این صفحه فقط برای باز نگه داشتن سرور رندر هست و دیگه وب‌هوک رو دستکاری نمی‌کنه
     return "Bot is active!", 200
 
 if __name__ == "__main__":
+    # وب‌هوک فقط و فقط یک‌بار موقع استارت شدن اولیه برنامه ست میشه
+    try:
+        bot.remove_webhook()
+        # حواست باشه آدرس زیر رو دقیقاً به آدرس رندر خودت تغییر بدی (بدون اسلش آخر)
+        bot.set_webhook(url='https://YOUR_RENDER_APP_NAME.onrender.com/' + BOT_TOKEN)
+        print("Webhook successfully set!")
+    except Exception as e:
+        print(f"Error setting webhook: {e}")
+        
     app.run(host="0.0.0.0", port=int(os.environ.get('PORT', 5000)))
