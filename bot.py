@@ -7,7 +7,7 @@ from flask import Flask, request
 from threading import Thread
 
 # ----------------- تنظیمات اولیه ربات -----------------
-BOT_TOKEN = '8609389890:AAFHNmGPsb6CXIG15gOtdWwnqBG4VC5375I' # توکن شما
+BOT_TOKEN = '8609389890:AAFHNmgPSb6CXIG15gOtdWWnqBG4VC5375I' # توکن شما
 ADMIN_ID = 7267007753  # آیدی عددی ادمین
 
 # ----------------- اطلاعات پنل نهان کلودفلر -----------------
